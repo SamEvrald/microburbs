@@ -2,20 +2,18 @@ import os
 import requests
 from flask import Flask, render_template, request, jsonify
 
-# --- Configuration and Initialization ---
 
-# Initialize Flask application
 app = Flask(__name__)
 
 # Sandbox API details
 API_URL = "https://www.microburbs.com.au/report_generator/api/suburb/properties"
-# Note: In a real environment, the Bearer token would be loaded securely
+
 API_HEADERS = {
     "Authorization": "Bearer test",
     "Content-Type": "application/json"
 }
 
-# --- Utility Functions for Data Transformation ---
+
 
 def analyze_property_data(data):
     """
@@ -31,7 +29,7 @@ def analyze_property_data(data):
         print("DEBUG: No properties found, returning None")
         return None
 
-    # Calculate simple averages and risks from a list of properties
+   
     
     # 1. Price Index (Using price field as market value)
     sale_prices = [p.get('price', 0) for p in properties if p.get('price') is not None]
@@ -54,9 +52,7 @@ def analyze_property_data(data):
     
     avg_dom = round(sum(dom_list) / len(dom_list) if dom_list else 0)
     
-    # Heuristic for Risk Score (lower DOM = faster sales = lower risk of liquidity issue = higher score)
-    # A low DOM (e.g., 20 days) is high score; high DOM (e.g., 100 days) is low score.
-    # We cap the maximum score at 100 and normalize based on a target (e.g., 50 days)
+   
     risk_score = max(0, min(100, 100 - (avg_dom - 20) * 1.5))
     
     # 3. Growth Potential Index (Using bedrooms from attributes as proxy for family interest/growth potential)
@@ -69,8 +65,8 @@ def analyze_property_data(data):
     
     avg_beds = round(sum(bedrooms) / len(bedrooms) if bedrooms else 0, 1)
 
-    # Heuristic for Growth Score (Higher average beds usually implies family appeal and stable growth)
-    growth_score = max(0, min(100, (avg_beds / 4) * 100)) # Scale 4 beds max to 100
+    
+    growth_score = max(0, min(100, (avg_beds / 4) * 100))
 
     # Summary Statistics for the user interface
     summary = {
@@ -80,7 +76,7 @@ def analyze_property_data(data):
         'avg_bedrooms': avg_beds
     }
     
-    # Investor Scorecard (The simplified insight)
+ 
     scorecard = {
         'liquidity_risk': {
             'label': 'Liquidity Risk Score',
@@ -94,15 +90,14 @@ def analyze_property_data(data):
         }
     }
 
-    return {'summary': summary, 'scorecard': scorecard, 'raw_properties': properties[:5]} # Return max 5 raw items
+    return {'summary': summary, 'scorecard': scorecard, 'raw_properties': properties[:5]}
 
-# --- Flask Routes ---
+
 
 @app.route('/')
 def home():
     """Renders the main single-page application."""
-    # Note: In a real deployment, the HTML file would be in a 'templates' folder.
-    # Since this is a single-file environment, we render it directly.
+   
     return render_template('index.html')
 
 @app.route('/test')
@@ -135,7 +130,7 @@ def analyze_suburb():
                 "error": f"No property data found for {suburb_name}. Please try a different suburb."
             }), 404
 
-        # Return the simplified, analyzed data to the frontend
+        
         return jsonify({
             'suburb': suburb_name,
             'analysis': analysis_result
@@ -158,11 +153,10 @@ def analyze_suburb():
         return jsonify({"error": "An unexpected server error occurred during analysis."}), 500
 
 
-# --- Run the Application ---
+
 
 if __name__ == '__main__':
-    # Flask will automatically serve index.html from the same directory 
-    # when running in the single-file Canvas environment.
+   
     app.run(debug=True)
 
-# Note: The 'index.html' file needs to be created in the next block.
+
