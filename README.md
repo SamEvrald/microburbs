@@ -1,0 +1,1 @@
+Clean web dashboard showing "Belmont North Investment Analysis" with two key metrics: Family Growth Potential (100/100) and Liquidity Risk Score (62/100), plus market summary showing 11 listings, $1.57M average price.

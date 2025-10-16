@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microburbs Property Analyzer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        .search-section {
+            margin-bottom: 30px;
+        }
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 500;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .error {
+            background: #fee;
+            color: #c53030;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #c53030;
+        }
+        .results {
+            margin-top: 30px;
+        }
+        .suburb-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+        }
+        .scorecard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .score-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 6px solid #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .score-item:hover {
+            transform: translateY(-5px);
+        }
+        .score-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        .score-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1.1em;
+        }
+        .score-explanation {
+            font-size: 0.95em;
+            color: #666;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+        .summary {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .summary h3 {
+            margin-top: 0;
+            color: #495057;
+            text-align: center;
+            font-size: 1.4em;
+            margin-bottom: 25px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .summary-item {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .summary-item .value {
+            font-size: 1.6em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .summary-item .label {
+            font-size: 0.95em;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        .instruction {
+            color: #666;
+            font-size: 0.95em;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .scorecard {
+                grid-template-columns: 1fr;
+            }
+            .search-box {
+                flex-direction: column;
+            }
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Property Investment Analyzer</h1>
+        <p class="subtitle">Turn complex property data into actionable investment insights</p>
+        
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" id="suburbInput" placeholder="Enter suburb name (e.g., 'Belmont North')" />
+                <button onclick="analyzeSuburb()" id="analyzeBtn">Analyze Market</button>
+            </div>
+            <p class="instruction">
+                🔍 Enter an Australian suburb name to get comprehensive investment metrics including liquidity risk and growth potential analysis.
+            </p>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            📊 Analyzing property market data... Please wait.
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="results" class="results" style="display: none;">
+            <div class="suburb-title" id="suburbName"></div>
+            
+            <div class="scorecard" id="scorecard">
+                <!-- Scorecard items will be populated here -->
+            </div>
+
+            <div class="summary">
+                <h3>📈 Market Intelligence Summary</h3>
+                <div class="summary-grid" id="summaryGrid">
+                    <!-- Summary items will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function analyzeSuburb() {
+            const suburb = document.getElementById('suburbInput').value.trim();
+            if (!suburb) {
+                alert('Please enter a suburb name to analyze');
+                return;
+            }
+
+            // Show loading state
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('analyzeBtn').textContent = 'Analyzing...';
+
+            // Make API call
+            fetch(`/api/analyze?suburb=${encodeURIComponent(suburb)}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('analyzeBtn').disabled = false;
+                    document.getElementById('analyzeBtn').textContent = 'Analyze Market';
+
+                    if (data.error) {
+                        showError(data.error);
+                    } else {
+                        showResults(data);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('analyzeBtn').disabled = false;
+                    document.getElementById('analyzeBtn').textContent = 'Analyze Market';
+                    showError('Network error occurred. Please check your connection and try again.');
+                    console.error('Error:', error);
+                });
+        }
+
+        function showError(message) {
+            document.getElementById('error').innerHTML = `
+                <strong>⚠️ Analysis Failed</strong><br>
+                ${message}
+            `;
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+        }
+
+        function showResults(data) {
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('suburbName').textContent = `📍 ${data.suburb} Investment Analysis`;
+
+            // Populate scorecard
+            const scorecard = document.getElementById('scorecard');
+            scorecard.innerHTML = '';
+            
+            Object.values(data.analysis.scorecard).forEach(score => {
+                const scoreItem = document.createElement('div');
+                scoreItem.className = 'score-item';
+                
+                // Color coding based on score
+                let borderColor = '#667eea';
+                if (score.value >= 70) borderColor = '#48bb78';
+                else if (score.value >= 50) borderColor = '#ed8936';
+                else borderColor = '#f56565';
+                
+                scoreItem.style.borderLeftColor = borderColor;
+                
+                scoreItem.innerHTML = `
+                    <div class="score-label">${score.label}</div>
+                    <div class="score-value" style="color: ${borderColor}">${score.value}/100</div>
+                    <div class="score-explanation">${score.explanation}</div>
+                `;
+                scorecard.appendChild(scoreItem);
+            });
+
+            // Populate summary
+            const summaryGrid = document.getElementById('summaryGrid');
+            summaryGrid.innerHTML = '';
+            
+            const summary = data.analysis.summary;
+            const summaryItems = [
+                { label: 'Active Listings', value: summary.total_listings, icon: '🏘️' },
+                { label: 'Average Price', value: `$${summary.avg_sale_price.toLocaleString()}`, icon: '💰' },
+                { label: 'Days on Market', value: `${summary.avg_days_on_market} days`, icon: '⏱️' },
+                { label: 'Average Bedrooms', value: summary.avg_bedrooms, icon: '🛏️' }
+            ];
+
+            summaryItems.forEach(item => {
+                const summaryItem = document.createElement('div');
+                summaryItem.className = 'summary-item';
+                summaryItem.innerHTML = `
+                    <div class="value">${item.icon} ${item.value}</div>
+                    <div class="label">${item.label}</div>
+                `;
+                summaryGrid.appendChild(summaryItem);
+            });
+        }
+
+        // Allow Enter key to trigger search
+        document.getElementById('suburbInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeSuburb();
+            }
+        });
+
+        // Auto-focus on input field
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('suburbInput').focus();
+        });
+    </script>
+</body>
+</html>
